@@ -982,9 +982,23 @@
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
     });
     audioEl.addEventListener('pause', () => {
+      // Si el sistema pausa el audio mientras DEBERÍA estar reproduciéndose
+      // (suspensión en segundo plano), reintentamos reanudar.
+      if (isPlaying && !isPaused && !audioEl.ended && document.visibilityState !== 'visible') {
+        audioEl.play().catch(() => {});
+        return;
+      }
       if (!audioEl.ended && 'mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
     });
   }
+
+  // Al volver a primer plano, si seguíamos en estado "reproduciendo" pero el
+  // audio se detuvo, lo reanudamos desde donde quedó.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && isPlaying && !isPaused && audioEl.paused && !audioEl.ended) {
+      audioEl.play().catch(() => {});
+    }
+  });
 
   function playBlob(blob, ssml) {
     bindAudioListeners();
@@ -1081,6 +1095,17 @@
     document.getElementById('shared-banner').classList.remove('hidden');
     window.history.replaceState({}, '', window.location.pathname);
   })();
+
+  // ══════════════════════════════════════
+  // SERVICE WORKER — convierte la PWA en una app instalada con proceso
+  // persistente, necesario para que el audio siga en segundo plano
+  // ══════════════════════════════════════
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/ssml/sw.js', { scope: '/ssml/' })
+        .catch((err) => console.warn('SW no registrado:', err));
+    });
+  }
 
   loadPrefs();
 </script>

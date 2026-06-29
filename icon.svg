@@ -14,17 +14,21 @@
     </linearGradient>
   </defs>
 
-  <!-- Fondo base (App Icon Style) -->
-  <rect x="32" y="32" width="448" height="448" rx="100" ry="100" fill="url(#bg-grad)" stroke="#2e333d" stroke-width="4" />
-  
-  <!-- Etiqueta XML flotante y sutil de fondo -->
-  <text x="256" y="140" fill="#3d4250" font-family="monospace, sans-serif" font-weight="900" font-size="70" text-anchor="middle" letter-spacing="4">&lt;/&gt;</text>
+  <!-- Fondo a sangre completa: cubre TODO el lienzo (sin esquinas transparentes).
+       Android lo recorta a la forma del sistema (squircle del Pixel, círculo, etc.) -->
+  <rect x="0" y="0" width="512" height="512" fill="url(#bg-grad)" />
+
+  <!-- Todo el contenido vive dentro de la zona segura (círculo de radio ~205,
+       el 80% central) para que ningún recorte del sistema lo corte. -->
+
+  <!-- Etiqueta XML sutil de fondo -->
+  <text x="256" y="178" fill="#3d4250" font-family="monospace, sans-serif" font-weight="900" font-size="64" text-anchor="middle" letter-spacing="4">&lt;/&gt;</text>
 
   <!-- Ondas de sonido centrales -->
-  <rect x="176" y="206" width="36" height="100" rx="18" fill="url(#bar-grad)" />
-  <rect x="238" y="156" width="36" height="200" rx="18" fill="url(#bar-grad-green)" />
-  <rect x="300" y="216" width="36" height="80" rx="18" fill="url(#bar-grad)" />
+  <rect x="182" y="236" width="34" height="92" rx="17" fill="url(#bar-grad)" />
+  <rect x="239" y="190" width="34" height="184" rx="17" fill="url(#bar-grad-green)" />
+  <rect x="296" y="244" width="34" height="76" rx="17" fill="url(#bar-grad)" />
 
   <!-- Texto inferior -->
-  <text x="256" y="420" fill="#e8eaf0" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-weight="800" font-size="52" text-anchor="middle" letter-spacing="6">SSML</text>
+  <text x="256" y="426" fill="#e8eaf0" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-weight="800" font-size="48" text-anchor="middle" letter-spacing="6">SSML</text>
 </svg>
