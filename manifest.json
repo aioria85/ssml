@@ -1,0 +1,26 @@
+{
+  "name": "SSML Reader",
+  "short_name": "SSML Reader",
+  "description": "Lector SSML con voces de Google Cloud TTS",
+  "start_url": "/ssml/index.html",
+  "scope": "/ssml/",
+  "display": "standalone",
+  "background_color": "#f5f3ef",
+  "theme_color": "#f5f3ef",
+  "orientation": "portrait",
+  "share_target": {
+    "action": "/ssml/index.html",
+    "method": "GET",
+    "params": {
+      "text": "shared_text"
+    }
+  },
+  "icons": [
+    {
+      "src": "/ssml/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
