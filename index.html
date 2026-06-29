@@ -31,8 +31,8 @@
       --text:         #e8eaf0;
       --text-mid:     #9aa0b4;
       --text-dim:     #5a6070;
-      --highlight-bg: rgba(251,191,36,0.25);
-      --highlight-border: rgba(251,191,36,0.6);
+      --highlight-bg: rgba(91,141,238,0.2);
+      --highlight-border: rgba(91,141,238,0.5);
       --radius:       10px;
       --radius-sm:    6px;
     }
@@ -91,7 +91,6 @@
     }
     .time-display.active { color: var(--text-mid); }
 
-    /* Botón icono ⚙️ */
     .btn-icon {
       background: none;
       border: 1px solid var(--border);
@@ -107,7 +106,7 @@
     .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
     .btn-icon.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
 
-    /* ═══ PANEL DE CONFIGURACIÓN (drawer lateral) ═══ */
+    /* ═══ PANEL DE CONFIGURACIÓN ═══ */
     .settings-overlay {
       position: fixed; inset: 0;
       background: rgba(0,0,0,0.6);
@@ -171,7 +170,6 @@
       overscroll-behavior: contain;
     }
 
-    /* ═══ BANNER COMPARTIR ═══ */
     .shared-banner {
       background: var(--green-dim);
       border: 1px solid rgba(62,207,142,0.3);
@@ -207,7 +205,7 @@
       font-weight: 500;
       margin-bottom: 4px;
     }
-    input[type="password"], select, textarea {
+    input[type="password"], input[type="text"].api-input, select, textarea {
       width: 100%;
       background: var(--surface-2);
       border: 1px solid var(--border);
@@ -235,9 +233,7 @@
     .row { display: flex; gap: 10px; }
     .row > * { flex: 1; min-width: 0; }
 
-    /* Botón guardar API key */
     .api-key-row { display: flex; gap: 8px; align-items: flex-end; }
-    .api-key-row input { flex: 1; }
     .btn-save-key {
       background: var(--accent);
       color: #fff;
@@ -289,14 +285,14 @@
     }
     .char-count.warn { color: var(--amber); }
 
-    /* ═══ VISTA DE REPRODUCCIÓN ═══ */
+    /* ═══ VISTA DE REPRODUCCIÓN (FRASES) ═══ */
     #playback-view {
       display: none;
       background: var(--bg);
       border: 1px solid var(--border-mid);
       border-radius: var(--radius-sm);
       padding: 14px;
-      font-size: 0.88rem;
+      font-size: 0.95rem;
       line-height: 1.8;
       min-height: 200px;
       font-family: 'Inter', sans-serif;
@@ -304,23 +300,26 @@
       word-break: break-word;
     }
     #playback-view.active { display: block; }
+    
     .word-token {
-      display: inline;
-      padding: 1px 0;
-      border-radius: 3px;
-      transition: background 0.1s, color 0.1s;
+      display: block;
+      padding: 6px 10px;
+      margin-bottom: 6px;
+      border-radius: var(--radius-sm);
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+      border: 1px solid transparent;
     }
     .word-token.spoken {
       color: var(--text-dim);
+      background: transparent;
     }
     .word-token.current {
       background: var(--highlight-bg);
       color: var(--text);
-      outline: 1px solid var(--highlight-border);
-      border-radius: 3px;
+      border-color: var(--highlight-border);
     }
     .word-token.pending {
-      color: var(--text);
+      color: var(--text-mid);
     }
 
     /* ═══ PILLS ═══ */
@@ -330,7 +329,7 @@
       gap: 8px;
       flex-wrap: nowrap;
       overflow-x: auto;
-      padding-bottom: 2px;
+      padding-bottom: 4px;
       scrollbar-width: none;
     }
     .pills-row::-webkit-scrollbar { display: none; }
@@ -382,7 +381,7 @@
       height: 100%;
       background: var(--accent);
       width: 0%;
-      transition: width 0.5s linear;
+      transition: width 0.25s linear;
       border-radius: 3px;
     }
 
@@ -458,7 +457,10 @@
     <div>
       <div class="settings-section-title">API Key · Google Cloud</div>
       <div class="api-key-row">
-        <input type="password" id="api-key" placeholder="AIzaSy..." autocomplete="off">
+        <div style="position: relative; flex: 1;">
+          <input type="password" class="api-input" id="api-key" placeholder="AIzaSy..." autocomplete="off" style="padding-right: 38px;">
+          <button type="button" onclick="toggleVisibility()" style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; background: none; border: none; color: var(--text-dim); font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">👁️</button>
+        </div>
         <button class="btn-save-key" id="btn-save-key" onclick="saveApiKey()">Guardar</button>
       </div>
       <p class="hint">
@@ -473,9 +475,9 @@
       <div class="settings-section-title">Voz</div>
       <select id="voice" onchange="savePrefs()">
         <optgroup label="🇪🇸 Español España — Neural2">
-          <option value="es-ES-Neural2-A">es-ES Neural2-A mujer</option>
+          <option value="es-ES-Neural2-C" selected>es-ES Neural2-C mujer</option>
           <option value="es-ES-Neural2-B">es-ES Neural2-B hombre</option>
-          <option value="es-ES-Neural2-C">es-ES Neural2-C mujer</option>
+          <option value="es-ES-Neural2-A">es-ES Neural2-A mujer</option>
           <option value="es-ES-Neural2-D">es-ES Neural2-D mujer</option>
           <option value="es-ES-Neural2-E">es-ES Neural2-E mujer</option>
           <option value="es-ES-Neural2-F">es-ES Neural2-F hombre</option>
@@ -497,29 +499,9 @@
           <option value="en-US-Neural2-D">en-US Neural2-D male</option>
           <option value="en-US-Neural2-F">en-US Neural2-F female</option>
         </optgroup>
-        <optgroup label="🇫🇷 Français — Neural2">
-          <option value="fr-FR-Neural2-A">fr-FR Neural2-A femme</option>
-          <option value="fr-FR-Neural2-B">fr-FR Neural2-B homme</option>
-          <option value="fr-FR-Neural2-C">fr-FR Neural2-C femme</option>
-        </optgroup>
-        <optgroup label="🇩🇪 Deutsch — Neural2">
-          <option value="de-DE-Neural2-A">de-DE Neural2-A Frau</option>
-          <option value="de-DE-Neural2-B">de-DE Neural2-B Mann</option>
-          <option value="de-DE-Neural2-C">de-DE Neural2-C Frau</option>
-        </optgroup>
-        <optgroup label="🇮🇹 Italiano — Neural2">
-          <option value="it-IT-Neural2-A">it-IT Neural2-A donna</option>
-          <option value="it-IT-Neural2-C">it-IT Neural2-C uomo</option>
-        </optgroup>
-        <optgroup label="🇵🇹 Português — Neural2">
-          <option value="pt-PT-Neural2-A">pt-PT Neural2-A mulher</option>
-          <option value="pt-PT-Neural2-B">pt-PT Neural2-B homem</option>
-          <option value="pt-BR-Neural2-A">pt-BR Neural2-A mulher</option>
-        </optgroup>
         <optgroup label="Standard (sin cuota)">
           <option value="es-ES-Standard-A">es-ES Standard-A</option>
           <option value="en-US-Standard-C">en-US Standard-C</option>
-          <option value="en-GB-Standard-A">en-GB Standard-A</option>
         </optgroup>
       </select>
     </div>
@@ -565,28 +547,25 @@
     <div class="card-title">Editor SSML</div>
 
     <!-- MODO EDICIÓN -->
-    <textarea id="ssml-input" spellcheck="false" placeholder='<speak>
-  Escribe aquí tu texto.
-  <break time="500ms"/>
-  Usa <emphasis level="strong">énfasis</emphasis>,
-  <prosody rate="slow" pitch="-2st">cambios de tono</prosody>
-  y pausas <break time="800ms"/> donde necesites.
-</speak>'></textarea>
+    <textarea id="ssml-input" spellcheck="false" placeholder="Escribe o pega aquí tu texto SSML...&#10;Usa las etiquetas inferiores para enriquecer el audio."></textarea>
 
     <!-- MODO REPRODUCCIÓN -->
     <div id="playback-view"></div>
 
     <div class="char-count" id="char-count">0 caracteres</div>
 
-    <!-- Pills de etiquetas frecuentes -->
+    <!-- Pills de acciones e inserción -->
     <div class="pills-row" style="margin-top:10px">
+      <span class="pills-label">Acciones</span>
+      <button class="pill" onclick="clearAll()" style="background: rgba(248,113,113,0.12); color: var(--red); border-color: rgba(248,113,113,0.25);">🗑️ Borrar todo</button>
+      
       <span class="pills-label">Insertar</span>
       <button class="pill" onclick="insertSnippet('break_s')">Pausa corta</button>
       <button class="pill" onclick="insertSnippet('break_l')">Pausa larga</button>
       <button class="pill" onclick="insertSnippet('slow')">Lento</button>
       <button class="pill" onclick="insertSnippet('fast')">Rápido</button>
-      <button class="pill" onclick="insertSnippet('low')">Grave</button>
-      <button class="pill" onclick="insertSnippet('high')">Agudo</button>
+      <button class="pill" onclick="insertSnippet('low')">Grave (-20%)</button>
+      <button class="pill" onclick="insertSnippet('high')">Agudo (+25%)</button>
       <button class="pill" onclick="insertSnippet('em')">Énfasis</button>
       <button class="pill" onclick="insertSnippet('chars')">Deletrear</button>
       <button class="pill" onclick="insertSnippet('date')">Fecha</button>
@@ -596,7 +575,7 @@
 
     <p class="hint" style="margin-top:8px">
       <code>&lt;break time="800ms"/&gt;</code>
-      <code>&lt;prosody rate="slow" pitch="-2st"&gt;</code>
+      <code>&lt;prosody pitch="+25%"&gt;</code>
       <code>&lt;emphasis level="strong"&gt;</code>
     </p>
   </div>
@@ -626,13 +605,11 @@
   let blobUrl   = null;
   let isPlaying = false;
   let isPaused  = false;
-  let wordTokens = [];   // spans del playback view
-  let wordCount  = 0;
-  let currentWordIdx = 0;
+  
+  let wordTokens = [];       // Spans que guardan FRASES COMPLETAS
+  let sentenceTimings = [];  // Array con los segundos en los que termina cada frase
+  let currentSentenceIdx = -1;
 
-  // ══════════════════════════════════════
-  // CONFIGURACIÓN / SETTINGS PANEL
-  // ══════════════════════════════════════
   function openSettings() {
     document.getElementById('settings-panel').classList.add('open');
     document.getElementById('settings-overlay').classList.add('open');
@@ -644,7 +621,11 @@
     document.getElementById('btn-settings').classList.remove('active');
   }
 
-  // Guardar API key con botón explícito
+  function toggleVisibility() {
+    const input = document.getElementById('api-key');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+
   function saveApiKey() {
     const val = document.getElementById('api-key').value.trim();
     if (!val) return;
@@ -655,13 +636,11 @@
     setTimeout(() => { btn.textContent = 'Guardar'; btn.classList.remove('saved'); }, 2000);
   }
 
-  // Guardar voz y velocidad al cambiar
   function savePrefs() {
     localStorage.setItem('ssmlr_voice', document.getElementById('voice').value);
     localStorage.setItem('ssmlr_speed', document.getElementById('speed').value);
   }
 
-  // Cargar preferencias guardadas
   function loadPrefs() {
     const key   = localStorage.getItem('ssmlr_key');
     const voice = localStorage.getItem('ssmlr_voice');
@@ -669,10 +648,16 @@
     if (key)   document.getElementById('api-key').value = key;
     if (voice) document.getElementById('voice').value = voice;
     if (speed) document.getElementById('speed').value = speed;
-    // Si ya hay key guardada, mostrar indicador en botón settings
     if (key) {
       document.getElementById('btn-settings').title = 'Configuración (API key guardada)';
     }
+  }
+
+  function clearAll() {
+    const ta = document.getElementById('ssml-input');
+    ta.value = '';
+    ta.dispatchEvent(new Event('input'));
+    ta.focus();
   }
 
   // ══════════════════════════════════════
@@ -693,11 +678,11 @@
     break_l: '<break time="1000ms"/>',
     slow:    '<prosody rate="slow">texto aquí</prosody>',
     fast:    '<prosody rate="fast">texto aquí</prosody>',
-    low:     '<prosody pitch="-3st">texto aquí</prosody>',
-    high:    '<prosody pitch="+3st">texto aquí</prosody>',
+    low:     '<prosody pitch="-20%">texto aquí</prosody>',
+    high:    '<prosody pitch="+25%">texto aquí</prosody>',
     em:      '<emphasis level="strong">texto aquí</emphasis>',
     chars:   '<say-as interpret-as="characters">ABC</say-as>',
-    date:    '<say-as interpret-as="date" format="dmy">01/01/2024</say-as>',
+    date:    '<say-as interpret-as="date" format="dmy">01/01/2026</say-as>',
     sub:     '<sub alias="texto hablado">texto escrito</sub>',
     wrap:    null,
   };
@@ -721,9 +706,9 @@
   }
 
   // ══════════════════════════════════════
-  // STATUS / UI STATE
+  // UI STATUS STATE
   // ══════════════════════════════════════
-  function setDot(state) { // 'idle'|'loading'|'playing'|'error'
+  function setDot(state) {
     const dot = document.getElementById('status-dot');
     dot.className = 'status-dot' + (state !== 'idle' ? ' ' + state : '');
   }
@@ -739,7 +724,6 @@
     document.getElementById('btn-play').disabled  = playing;
     document.getElementById('btn-pause').disabled = !playing;
     document.getElementById('btn-stop').disabled  = !playing;
-    document.getElementById('btn-play').textContent = playing ? '▶' : '▶';
   }
   function formatTime(secs) {
     if (!isFinite(secs) || secs < 0) return '—';
@@ -749,61 +733,67 @@
   }
 
   // ══════════════════════════════════════
-  // PLAYBACK VIEW — resaltado de palabras
+  // PLAYBACK VIEW — RESALTADO PROPORCIONAL
   // ══════════════════════════════════════
   function buildPlaybackView(ssml) {
-    // Extraer texto limpio quitando tags XML
     const clean = ssml
       .replace(/<[^>]+>/g, ' ')
       .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
       .replace(/\s+/g, ' ').trim();
 
-    const words = clean.split(' ').filter(w => w.length > 0);
+    // Segmentar por delimitadores tipográficos (. ? !) preservándolos
+    const sentences = clean.split(/(?<=[.?!])\s+/).filter(s => s.trim().length > 0);
+    
     const view  = document.getElementById('playback-view');
     view.innerHTML = '';
     wordTokens = [];
 
-    words.forEach((word, i) => {
+    sentences.forEach((sentence) => {
       const span = document.createElement('span');
       span.className = 'word-token pending';
-      span.textContent = word;
+      span.textContent = sentence;
       view.appendChild(span);
-      if (i < words.length - 1) view.appendChild(document.createTextNode(' '));
       wordTokens.push(span);
     });
 
-    wordCount = words.length;
-    currentWordIdx = 0;
-    return wordCount;
+    currentSentenceIdx = -1;
   }
 
-  function highlightWord(idx) {
-    wordTokens.forEach((span, i) => {
-      if (i < idx)       span.className = 'word-token spoken';
-      else if (i === idx) span.className = 'word-token current';
-      else               span.className = 'word-token pending';
+  function calculateTimings(duration) {
+    sentenceTimings = [];
+    let totalChars = wordTokens.reduce((sum, span) => sum + span.textContent.length, 0);
+    if (totalChars === 0) totalChars = 1; // Prevenir división por cero
+    
+    let accum = 0;
+    wordTokens.forEach((span) => {
+        let share = span.textContent.length / totalChars;
+        accum += duration * share;
+        sentenceTimings.push(accum);
     });
-    // Auto-scroll para mantener la palabra visible
-    if (wordTokens[idx]) {
-      wordTokens[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  function updateHighlight(currentTime) {
+    if (sentenceTimings.length === 0) return;
+    
+    // Buscar en qué frase nos encontramos según el tiempo transcurrido
+    let idx = sentenceTimings.findIndex(time => currentTime <= time);
+    if (idx === -1) idx = sentenceTimings.length - 1; 
+
+    // Actualizar el DOM solo si cambiamos de frase
+    if (idx !== currentSentenceIdx) {
+        currentSentenceIdx = idx;
+        wordTokens.forEach((span, i) => {
+          if (i < idx)       span.className = 'word-token spoken';
+          else if (i === idx) span.className = 'word-token current';
+          else               span.className = 'word-token pending';
+        });
+        
+        if (wordTokens[idx]) {
+          wordTokens[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
     }
   }
 
-  function startWordHighlight(duration) {
-    if (wordCount === 0 || duration === 0) return;
-    const interval = (duration * 1000) / wordCount;
-    currentWordIdx = 0;
-    highlightWord(0);
-    const timer = setInterval(() => {
-      if (!isPlaying) { clearInterval(timer); return; }
-      currentWordIdx++;
-      if (currentWordIdx >= wordCount) { clearInterval(timer); return; }
-      highlightWord(currentWordIdx);
-    }, interval);
-    return timer;
-  }
-
-  // Alternar entre editor y vista reproducción
   function showPlaybackView(ssml) {
     buildPlaybackView(ssml);
     document.getElementById('ssml-input').style.display = 'none';
@@ -813,15 +803,16 @@
     document.getElementById('ssml-input').style.display = '';
     document.getElementById('playback-view').classList.remove('active');
     wordTokens = [];
+    sentenceTimings = [];
   }
 
   // ══════════════════════════════════════
-  // AUDIO ENGINE
+  // AUDIO ENGINE 
   // ══════════════════════════════════════
   function stopAudio() {
     if (audioEl) { audioEl.pause(); audioEl.src = ''; audioEl = null; }
     if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
-    isPaused = false; isPlaying = false;
+    isPlaying = false; isPaused = false;
     setButtons(false);
     setProgress(0);
     setDot('idle');
@@ -862,53 +853,53 @@
     audioEl = new Audio(blobUrl);
     audioEl.preload = 'auto';
 
-    let highlightTimer = null;
-
     audioEl.addEventListener('loadedmetadata', () => {
       const dur = audioEl.duration;
       document.getElementById('time-display').textContent = `0:00 / ${formatTime(dur)}`;
       document.getElementById('time-display').classList.add('active');
-      // Arrancar resaltado
-      highlightTimer = startWordHighlight(dur);
+      
+      // Calcular los tiempos exactos proporcionalmente al cargar el audio
+      calculateTimings(dur);
     });
 
     audioEl.addEventListener('timeupdate', () => {
       if (!audioEl) return;
       const cur = audioEl.currentTime;
       const dur = audioEl.duration;
+      
       if (dur) {
         setProgress((cur / dur) * 100);
-        document.getElementById('time-display').textContent =
-          `${formatTime(cur)} / ${formatTime(dur)}`;
+        document.getElementById('time-display').textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
+        
+        // El resaltado es llamado de forma nativa por el avance real del audio
+        updateHighlight(cur);
       }
     });
 
     audioEl.addEventListener('ended', () => {
-      clearInterval(highlightTimer);
       isPlaying = false; isPaused = false;
       setButtons(false);
       setProgress(100);
       setDot('idle');
       setPlayerStatus('✓ Completado');
+      currentSentenceIdx = -1;
+      
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
-      // Resaltar todas como spoken al terminar
       wordTokens.forEach(s => s.className = 'word-token spoken');
-      setTimeout(() => { setProgress(0); setPlayerStatus('Listo'); showEditorView(); }, 3000);
+      setTimeout(() => { setProgress(0); setPlayerStatus('Listo'); showEditorView(); }, 2500);
     });
 
     audioEl.addEventListener('error', () => {
-      clearInterval(highlightTimer);
       setDot('error');
       setPlayerStatus('Error al reproducir', 'error');
       setButtons(false);
       showEditorView();
     });
 
-    // MediaSession
     if ('mediaSession' in navigator) {
-      const title = ssml.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,60) || 'SSML Reader';
+      const cleanTitle = ssml.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,60) || 'SSML Reader';
       navigator.mediaSession.metadata = new MediaMetadata({
-        title, artist: 'SSML Reader', album: 'Google Cloud TTS'
+        title: cleanTitle, artist: 'SSML Reader', album: 'Google Cloud TTS'
       });
       navigator.mediaSession.setActionHandler('play',  () => pauseResume());
       navigator.mediaSession.setActionHandler('pause', () => pauseResume());
@@ -924,13 +915,10 @@
       document.getElementById('btn-pause').textContent = '⏸ Pausa';
     }).catch(err => {
       setDot('error');
-      setPlayerStatus(`No se pudo reproducir: ${err.message}`, 'error');
+      setPlayerStatus(`Error de reproducción: ${err.message}`, 'error');
     });
   }
 
-  // ══════════════════════════════════════
-  // SPEAK — llamada a Google Cloud TTS
-  // ══════════════════════════════════════
   async function speak() {
     const apiKey = localStorage.getItem('ssmlr_key') || document.getElementById('api-key').value.trim();
     const voice  = document.getElementById('voice').value;
@@ -939,22 +927,20 @@
 
     if (!apiKey) {
       setDot('error');
-      setPlayerStatus('Falta la API Key — ábrela en ⚙️', 'error');
+      setPlayerStatus('Falta la API Key — Configuración ⚙️', 'error');
       openSettings();
       return;
     }
     if (!ssml) {
       setDot('error');
-      setPlayerStatus('Escribe texto SSML primero', 'error');
+      setPlayerStatus('Escribe o pega texto primero', 'error');
       return;
     }
     if (!ssml.startsWith('<speak')) ssml = `<speak>${ssml}</speak>`;
 
     stopAudio();
     setDot('loading');
-    setPlayerStatus('Enviando a Google Cloud…', 'loading');
-
-    // Cambiar a vista reproducción mientras carga
+    setPlayerStatus('Llamando a Google Cloud…', 'loading');
     showPlaybackView(ssml);
 
     try {
@@ -985,7 +971,7 @@
 
     } catch (e) {
       setDot('error');
-      setPlayerStatus(`Error: ${e.message}`, 'error');
+      setPlayerStatus(`Error API: ${e.message}`, 'error');
       showEditorView();
     }
   }
@@ -1004,9 +990,6 @@
     window.history.replaceState({}, '', window.location.pathname);
   })();
 
-  // ══════════════════════════════════════
-  // INIT
-  // ══════════════════════════════════════
   loadPrefs();
 </script>
 
