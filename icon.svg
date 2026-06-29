@@ -1,6 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
-  <rect width="192" height="192" rx="32" fill="#f5f3ef"/>
-  <rect x="12" y="12" width="168" height="168" rx="24" fill="#ffffff" stroke="#d8d4cc" stroke-width="2"/>
-  <text x="96" y="115" font-family="Georgia, serif" font-size="72" text-anchor="middle" fill="#2d6a4f" font-style="italic">S</text>
-  <rect x="32" y="140" width="128" height="3" rx="2" fill="#d8f3e3"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#252931" />
+      <stop offset="100%" stop-color="#111318" />
+    </linearGradient>
+    <linearGradient id="bar-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5b8dee" />
+      <stop offset="100%" stop-color="#3a6ac8" />
+    </linearGradient>
+    <linearGradient id="bar-grad-green" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3ecf8e" />
+      <stop offset="100%" stop-color="#2ba46d" />
+    </linearGradient>
+  </defs>
+
+  <!-- Fondo base (App Icon Style) -->
+  <rect x="32" y="32" width="448" height="448" rx="100" ry="100" fill="url(#bg-grad)" stroke="#2e333d" stroke-width="4" />
+  
+  <!-- Etiqueta XML flotante y sutil de fondo -->
+  <text x="256" y="140" fill="#3d4250" font-family="monospace, sans-serif" font-weight="900" font-size="70" text-anchor="middle" letter-spacing="4">&lt;/&gt;</text>
+
+  <!-- Ondas de sonido centrales -->
+  <rect x="176" y="206" width="36" height="100" rx="18" fill="url(#bar-grad)" />
+  <rect x="238" y="156" width="36" height="200" rx="18" fill="url(#bar-grad-green)" />
+  <rect x="300" y="216" width="36" height="80" rx="18" fill="url(#bar-grad)" />
+
+  <!-- Texto inferior -->
+  <text x="256" y="420" fill="#e8eaf0" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-weight="800" font-size="52" text-anchor="middle" letter-spacing="6">SSML</text>
 </svg>
