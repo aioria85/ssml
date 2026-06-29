@@ -10,7 +10,7 @@
   <title>SSML Reader</title>
   <link rel="manifest" href="manifest.json">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
     :root {
       --bg:           #111318;
@@ -62,24 +62,47 @@
       flex-shrink: 0;
       z-index: 20;
     }
-    .header-left { display: flex; align-items: center; gap: 10px; }
+    .header-left { display: flex; align-items: center; gap: 11px; }
+
+    .logo-mark {
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #252931 0%, #16181d 100%);
+      border: 1px solid #2e333d;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .logo-mark svg { width: 100%; height: 100%; display: block; }
+    .logo-mark .bar { fill: var(--accent); transform-box: fill-box; transform-origin: center; }
+    .logo-mark .bar-2 { fill: var(--green); }
+    /* Estado en reposo: barras quietas */
+    .logo-mark .bar { transition: fill 0.3s; }
+    /* Reproduciendo: las barras laten como un ecualizador */
+    .logo-mark.playing .bar-1 { animation: eq 0.9s ease-in-out infinite; }
+    .logo-mark.playing .bar-2 { animation: eq 0.9s ease-in-out infinite 0.15s; }
+    .logo-mark.playing .bar-3 { animation: eq 0.9s ease-in-out infinite 0.3s; }
+    .logo-mark.loading .bar { fill: var(--amber); animation: eq 0.6s ease-in-out infinite; }
+    .logo-mark.error .bar { fill: var(--red); }
+    @keyframes eq { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(0.45); } }
+
+    .title-block { display: flex; flex-direction: column; line-height: 1; gap: 3px; }
     header h1 {
-      font-size: 1rem;
+      font-family: 'Space Grotesk', 'Inter', sans-serif;
+      font-size: 1.08rem;
       font-weight: 600;
       color: var(--text);
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
     }
-    .status-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--text-dim);
-      transition: background 0.3s;
-      flex-shrink: 0;
+    .byline {
+      font-family: 'Space Grotesk', 'Inter', sans-serif;
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      opacity: 0.85;
     }
-    .status-dot.playing { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 1.2s ease-in-out infinite; }
-    .status-dot.loading { background: var(--amber); animation: pulse 0.8s ease-in-out infinite; }
-    .status-dot.error   { background: var(--red); }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
     .header-right { display: flex; align-items: center; gap: 8px; }
     .time-display {
@@ -529,8 +552,17 @@
 <!-- ═══ HEADER ═══ -->
 <header>
   <div class="header-left">
-    <div class="status-dot" id="status-dot"></div>
-    <h1>SSML Reader</h1>
+    <div class="logo-mark" id="logo-mark">
+      <svg viewBox="0 0 160 160" aria-hidden="true">
+        <rect class="bar bar-1" x="34" y="58" width="20" height="44" rx="10"/>
+        <rect class="bar bar-2" x="70" y="36" width="20" height="88" rx="10"/>
+        <rect class="bar bar-3" x="106" y="64" width="20" height="32" rx="10"/>
+      </svg>
+    </div>
+    <div class="title-block">
+      <h1>SSML Reader</h1>
+      <span class="byline">by ATL</span>
+    </div>
   </div>
   <div class="header-right">
     <div class="time-display" id="time-display">—</div>
@@ -558,30 +590,11 @@
 
     <div class="char-count" id="char-count">0 caracteres</div>
 
-    <!-- Pills de acciones e inserción -->
+    <!-- Pills de acciones -->
     <div class="pills-row" style="margin-top:10px">
       <span class="pills-label">Acciones</span>
       <button class="pill" onclick="clearAll()" style="background: rgba(248,113,113,0.12); color: var(--red); border-color: rgba(248,113,113,0.25);">🗑️ Borrar todo</button>
-      
-      <span class="pills-label">Insertar</span>
-      <button class="pill" onclick="insertSnippet('break_s')">Pausa corta</button>
-      <button class="pill" onclick="insertSnippet('break_l')">Pausa larga</button>
-      <button class="pill" onclick="insertSnippet('slow')">Lento</button>
-      <button class="pill" onclick="insertSnippet('fast')">Rápido</button>
-      <button class="pill" onclick="insertSnippet('low')">Grave (-20%)</button>
-      <button class="pill" onclick="insertSnippet('high')">Agudo (+25%)</button>
-      <button class="pill" onclick="insertSnippet('em')">Énfasis</button>
-      <button class="pill" onclick="insertSnippet('chars')">Deletrear</button>
-      <button class="pill" onclick="insertSnippet('date')">Fecha</button>
-      <button class="pill" onclick="insertSnippet('sub')">Sustitución</button>
-      <button class="pill featured" onclick="insertSnippet('wrap')">⟨speak⟩</button>
     </div>
-
-    <p class="hint" style="margin-top:8px">
-      <code>&lt;break time="800ms"/&gt;</code>
-      <code>&lt;prosody pitch="+25%"&gt;</code>
-      <code>&lt;emphasis level="strong"&gt;</code>
-    </p>
   </div>
 
 </main>
@@ -613,6 +626,28 @@
   let wordTokens = [];       // Spans que guardan FRASES COMPLETAS
   let sentenceTimings = [];  // Array con los segundos en los que termina cada frase
   let currentSentenceIdx = -1;
+  let endedTimer = null;     // Timeout pendiente del evento 'ended' (cancelable)
+  let wakeLock = null;       // WakeLock para que la pantalla/CPU no suspenda la lectura
+
+  // ══════════════════════════════════════
+  // WAKE LOCK — evita que Android suspenda la lectura en segundo plano
+  // ══════════════════════════════════════
+  async function requestWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } catch (e) {}
+  }
+  function releaseWakeLock() {
+    if (wakeLock) { try { wakeLock.release(); } catch (e) {} wakeLock = null; }
+  }
+  // Al volver a primer plano, re-adquirir el lock si seguimos reproduciendo
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && isPlaying && !wakeLock) {
+      requestWakeLock();
+    }
+  });
 
   function openSettings() {
     document.getElementById('settings-panel').classList.add('open');
@@ -677,44 +712,13 @@
   // ══════════════════════════════════════
   // SNIPPETS
   // ══════════════════════════════════════
-  const snippets = {
-    break_s: '<break time="300ms"/>',
-    break_l: '<break time="1000ms"/>',
-    slow:    '<prosody rate="slow">texto aquí</prosody>',
-    fast:    '<prosody rate="fast">texto aquí</prosody>',
-    low:     '<prosody pitch="-20%">texto aquí</prosody>',
-    high:    '<prosody pitch="+25%">texto aquí</prosody>',
-    em:      '<emphasis level="strong">texto aquí</emphasis>',
-    chars:   '<say-as interpret-as="characters">ABC</say-as>',
-    date:    '<say-as interpret-as="date" format="dmy">01/01/2026</say-as>',
-    sub:     '<sub alias="texto hablado">texto escrito</sub>',
-    wrap:    null,
-  };
-
-  function insertSnippet(key) {
-    const ta = document.getElementById('ssml-input');
-    if (key === 'wrap') {
-      const inner = ta.value.trim();
-      if (inner.startsWith('<speak')) return;
-      ta.value = `<speak>\n  ${inner}\n</speak>`;
-      ta.dispatchEvent(new Event('input'));
-      ta.focus();
-      return;
-    }
-    const s   = snippets[key];
-    const pos = ta.selectionEnd ?? ta.value.length;
-    ta.value  = ta.value.slice(0, pos) + s + ta.value.slice(pos);
-    ta.selectionEnd = pos + s.length;
-    ta.focus();
-    ta.dispatchEvent(new Event('input'));
-  }
 
   // ══════════════════════════════════════
   // UI STATUS STATE
   // ══════════════════════════════════════
   function setDot(state) {
-    const dot = document.getElementById('status-dot');
-    dot.className = 'status-dot' + (state !== 'idle' ? ' ' + state : '');
+    const logo = document.getElementById('logo-mark');
+    if (logo) logo.className = 'logo-mark' + (state !== 'idle' ? ' ' + state : '');
   }
   function setPlayerStatus(msg, type = '') {
     const el = document.getElementById('player-status');
@@ -844,6 +848,7 @@
   // AUDIO ENGINE (AJUSTADO PARA DOM BACKGROUND)
   // ══════════════════════════════════════
   function stopAudio() {
+    if (endedTimer) { clearTimeout(endedTimer); endedTimer = null; }
     if (audioEl) { 
       audioEl.pause(); 
       audioEl.src = ''; 
@@ -852,6 +857,7 @@
     }
     if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
     isPlaying = false; isPaused = false;
+    releaseWakeLock();
     setButtons(false);
     setProgress(0);
     setDot('idle');
@@ -868,6 +874,7 @@
     if (!isPaused) {
       audioEl.pause();
       isPaused = true; isPlaying = false;
+      releaseWakeLock();
       setDot('idle');
       setPlayerStatus('En pausa');
       document.getElementById('btn-pause').textContent = '▶ Reanudar';
@@ -878,6 +885,7 @@
     } else {
       audioEl.play();
       isPaused = false; isPlaying = true;
+      requestWakeLock();
       setDot('playing');
       setPlayerStatus('Reproduciendo…', 'playing');
       document.getElementById('btn-pause').textContent = '⏸ Pausa';
@@ -893,10 +901,12 @@
     // NUEVO: Creamos el audio y lo anclamos al documento para que Android no lo silencie
     audioEl = document.createElement('audio');
     audioEl.style.display = 'none';
+    audioEl.setAttribute('playsinline', '');
+    audioEl.preload = 'auto';
     document.body.appendChild(audioEl);
+    const thisAudio = audioEl;
     
     audioEl.src = blobUrl;
-    audioEl.preload = 'auto';
 
     audioEl.addEventListener('loadedmetadata', () => {
       const dur = audioEl.duration;
@@ -906,7 +916,7 @@
     });
 
     audioEl.addEventListener('timeupdate', () => {
-      if (!audioEl) return;
+      if (!audioEl || audioEl !== thisAudio) return;
       const cur = audioEl.currentTime;
       const dur = audioEl.duration;
       
@@ -914,20 +924,36 @@
         setProgress((cur / dur) * 100);
         document.getElementById('time-display').textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
         updateHighlight(cur);
+        // Informar la posición a Android para la notificación de medios
+        if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession && isFinite(dur)) {
+          try {
+            navigator.mediaSession.setPositionState({
+              duration: dur,
+              playbackRate: audioEl.playbackRate,
+              position: Math.min(cur, dur)
+            });
+          } catch (e) {}
+        }
       }
     });
 
     audioEl.addEventListener('ended', () => {
+      if (audioEl !== thisAudio) return; // Ignorar si ya hay un audio nuevo
       isPlaying = false; isPaused = false;
       setButtons(false);
       setProgress(100);
       setDot('idle');
       setPlayerStatus('✓ Completado');
       currentSentenceIdx = -1;
-      
+      releaseWakeLock();
+
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
       wordTokens.forEach(s => s.className = 'word-token spoken');
-      setTimeout(() => { setProgress(0); setPlayerStatus('Listo'); showEditorView(); }, 2500);
+      endedTimer = setTimeout(() => {
+        endedTimer = null;
+        if (audioEl !== thisAudio) return; // No tocar la vista si ya se inició otra lectura
+        setProgress(0); setPlayerStatus('Listo'); showEditorView();
+      }, 2500);
     });
 
     audioEl.addEventListener('error', () => {
@@ -945,11 +971,23 @@
       navigator.mediaSession.setActionHandler('play',  () => pauseResume());
       navigator.mediaSession.setActionHandler('pause', () => pauseResume());
       navigator.mediaSession.setActionHandler('stop',  () => stopAudio());
+      try {
+        navigator.mediaSession.setActionHandler('seekto', (d) => {
+          if (audioEl && d.seekTime != null) audioEl.currentTime = d.seekTime;
+        });
+        navigator.mediaSession.setActionHandler('seekbackward', (d) => {
+          if (audioEl) audioEl.currentTime = Math.max(0, audioEl.currentTime - (d.seekOffset || 10));
+        });
+        navigator.mediaSession.setActionHandler('seekforward', (d) => {
+          if (audioEl) audioEl.currentTime = Math.min(audioEl.duration || 0, audioEl.currentTime + (d.seekOffset || 10));
+        });
+      } catch (e) {}
       navigator.mediaSession.playbackState = 'playing';
     }
 
     audioEl.play().then(() => {
       isPlaying = true; isPaused = false;
+      requestWakeLock();
       setButtons(true);
       setDot('playing');
       setPlayerStatus('Reproduciendo…', 'playing');
