@@ -471,6 +471,9 @@
 </head>
 <body>
 
+<!-- Reproductor persistente: un único <audio> estable que Android trata como sesión de medios real -->
+<audio id="audio-player" preload="auto" playsinline></audio>
+
 <!-- ═══ OVERLAY CONFIGURACIÓN ═══ -->
 <div class="settings-overlay" id="settings-overlay" onclick="closeSettings()"></div>
 <div class="settings-panel" id="settings-panel">
@@ -618,36 +621,68 @@
   // ══════════════════════════════════════
   // ESTADO
   // ══════════════════════════════════════
-  let audioEl   = null;
+  const audioEl = document.getElementById('audio-player'); // Elemento persistente
   let blobUrl   = null;
   let isPlaying = false;
   let isPaused  = false;
-  
+  let listenersBound = false; // Los listeners del <audio> se registran una sola vez
+
   let wordTokens = [];       // Spans que guardan FRASES COMPLETAS
   let sentenceTimings = [];  // Array con los segundos en los que termina cada frase
   let currentSentenceIdx = -1;
   let endedTimer = null;     // Timeout pendiente del evento 'ended' (cancelable)
-  let wakeLock = null;       // WakeLock para que la pantalla/CPU no suspenda la lectura
 
   // ══════════════════════════════════════
-  // WAKE LOCK — evita que Android suspenda la lectura en segundo plano
+  // ARTWORK — un icono data-URL hace que Android trate la sesión como
+  // un reproductor de medios "real" que merece seguir vivo en segundo plano
   // ══════════════════════════════════════
-  async function requestWakeLock() {
-    if (!('wakeLock' in navigator)) return;
+  let artworkCache = null;
+  function getArtwork() {
+    if (artworkCache) return artworkCache;
     try {
-      wakeLock = await navigator.wakeLock.request('screen');
-      wakeLock.addEventListener('release', () => { wakeLock = null; });
+      const c = document.createElement('canvas');
+      c.width = 256; c.height = 256;
+      const x = c.getContext('2d');
+      const g = x.createLinearGradient(0, 0, 256, 256);
+      g.addColorStop(0, '#252931'); g.addColorStop(1, '#111318');
+      x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+      // Tres barras tipo ecualizador
+      const bars = [[80,110,'#5b8dee',44],[122,80,'#3ecf8e',96],[164,116,'#5b8dee',32]];
+      bars.forEach(([bx,by,col,h]) => {
+        x.fillStyle = col;
+        x.beginPath();
+        if (x.roundRect) x.roundRect(bx, by, 22, h, 11); else x.rect(bx, by, 22, h);
+        x.fill();
+      });
+      artworkCache = c.toDataURL('image/png');
+    } catch (e) { artworkCache = null; }
+    return artworkCache;
+  }
+
+  function setupMediaSession(title) {
+    if (!('mediaSession' in navigator)) return;
+    const art = getArtwork();
+    const meta = { title: title || 'SSML Reader', artist: 'SSML Reader', album: 'Google Cloud TTS' };
+    if (art) meta.artwork = [
+      { src: art, sizes: '256x256', type: 'image/png' },
+      { src: art, sizes: '512x512', type: 'image/png' }
+    ];
+    navigator.mediaSession.metadata = new MediaMetadata(meta);
+    navigator.mediaSession.setActionHandler('play',  () => { if (isPaused) pauseResume(); });
+    navigator.mediaSession.setActionHandler('pause', () => { if (isPlaying) pauseResume(); });
+    navigator.mediaSession.setActionHandler('stop',  () => stopAudio());
+    try {
+      navigator.mediaSession.setActionHandler('seekto', (d) => {
+        if (d.seekTime != null) audioEl.currentTime = d.seekTime;
+      });
+      navigator.mediaSession.setActionHandler('seekbackward', (d) => {
+        audioEl.currentTime = Math.max(0, audioEl.currentTime - (d.seekOffset || 10));
+      });
+      navigator.mediaSession.setActionHandler('seekforward', (d) => {
+        audioEl.currentTime = Math.min(audioEl.duration || 0, audioEl.currentTime + (d.seekOffset || 10));
+      });
     } catch (e) {}
   }
-  function releaseWakeLock() {
-    if (wakeLock) { try { wakeLock.release(); } catch (e) {} wakeLock = null; }
-  }
-  // Al volver a primer plano, re-adquirir el lock si seguimos reproduciendo
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && isPlaying && !wakeLock) {
-      requestWakeLock();
-    }
-  });
 
   function openSettings() {
     document.getElementById('settings-panel').classList.add('open');
@@ -849,15 +884,11 @@
   // ══════════════════════════════════════
   function stopAudio() {
     if (endedTimer) { clearTimeout(endedTimer); endedTimer = null; }
-    if (audioEl) { 
-      audioEl.pause(); 
-      audioEl.src = ''; 
-      audioEl.remove(); // NUEVO: Limpiamos el elemento del DOM
-      audioEl = null; 
-    }
+    audioEl.pause();
+    audioEl.removeAttribute('src');
+    audioEl.load(); // Libera el recurso sin destruir el elemento
     if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
     isPlaying = false; isPaused = false;
-    releaseWakeLock();
     setButtons(false);
     setProgress(0);
     setDot('idle');
@@ -870,11 +901,10 @@
   }
 
   function pauseResume() {
-    if (!audioEl) return;
+    if (!audioEl.src) return;
     if (!isPaused) {
       audioEl.pause();
       isPaused = true; isPlaying = false;
-      releaseWakeLock();
       setDot('idle');
       setPlayerStatus('En pausa');
       document.getElementById('btn-pause').textContent = '▶ Reanudar';
@@ -885,7 +915,6 @@
     } else {
       audioEl.play();
       isPaused = false; isPlaying = true;
-      requestWakeLock();
       setDot('playing');
       setPlayerStatus('Reproduciendo…', 'playing');
       document.getElementById('btn-pause').textContent = '⏸ Pausa';
@@ -894,19 +923,10 @@
     }
   }
 
-  function playBlob(blob, ssml) {
-    if (blobUrl) URL.revokeObjectURL(blobUrl);
-    blobUrl = URL.createObjectURL(blob);
-    
-    // NUEVO: Creamos el audio y lo anclamos al documento para que Android no lo silencie
-    audioEl = document.createElement('audio');
-    audioEl.style.display = 'none';
-    audioEl.setAttribute('playsinline', '');
-    audioEl.preload = 'auto';
-    document.body.appendChild(audioEl);
-    const thisAudio = audioEl;
-    
-    audioEl.src = blobUrl;
+  // Registra los listeners del <audio> una sola vez (elemento persistente)
+  function bindAudioListeners() {
+    if (listenersBound) return;
+    listenersBound = true;
 
     audioEl.addEventListener('loadedmetadata', () => {
       const dur = audioEl.duration;
@@ -916,15 +936,12 @@
     });
 
     audioEl.addEventListener('timeupdate', () => {
-      if (!audioEl || audioEl !== thisAudio) return;
       const cur = audioEl.currentTime;
       const dur = audioEl.duration;
-      
       if (dur) {
         setProgress((cur / dur) * 100);
         document.getElementById('time-display').textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
         updateHighlight(cur);
-        // Informar la posición a Android para la notificación de medios
         if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession && isFinite(dur)) {
           try {
             navigator.mediaSession.setPositionState({
@@ -938,60 +955,56 @@
     });
 
     audioEl.addEventListener('ended', () => {
-      if (audioEl !== thisAudio) return; // Ignorar si ya hay un audio nuevo
       isPlaying = false; isPaused = false;
       setButtons(false);
       setProgress(100);
       setDot('idle');
       setPlayerStatus('✓ Completado');
       currentSentenceIdx = -1;
-      releaseWakeLock();
-
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'none';
       wordTokens.forEach(s => s.className = 'word-token spoken');
       endedTimer = setTimeout(() => {
         endedTimer = null;
-        if (audioEl !== thisAudio) return; // No tocar la vista si ya se inició otra lectura
         setProgress(0); setPlayerStatus('Listo'); showEditorView();
       }, 2500);
     });
 
     audioEl.addEventListener('error', () => {
+      if (!audioEl.src) return; // Ignorar el error provocado por load() al limpiar
       setDot('error');
       setPlayerStatus('Error al reproducir', 'error');
       setButtons(false);
       showEditorView();
     });
 
-    if ('mediaSession' in navigator) {
-      const cleanTitle = ssml.replace(/<[\s\S]*?>/g,' ').replace(/\s+/g,' ').trim().slice(0,60) || 'SSML Reader';
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: cleanTitle, artist: 'SSML Reader', album: 'Google Cloud TTS'
-      });
-      navigator.mediaSession.setActionHandler('play',  () => pauseResume());
-      navigator.mediaSession.setActionHandler('pause', () => pauseResume());
-      navigator.mediaSession.setActionHandler('stop',  () => stopAudio());
-      try {
-        navigator.mediaSession.setActionHandler('seekto', (d) => {
-          if (audioEl && d.seekTime != null) audioEl.currentTime = d.seekTime;
-        });
-        navigator.mediaSession.setActionHandler('seekbackward', (d) => {
-          if (audioEl) audioEl.currentTime = Math.max(0, audioEl.currentTime - (d.seekOffset || 10));
-        });
-        navigator.mediaSession.setActionHandler('seekforward', (d) => {
-          if (audioEl) audioEl.currentTime = Math.min(audioEl.duration || 0, audioEl.currentTime + (d.seekOffset || 10));
-        });
-      } catch (e) {}
-      navigator.mediaSession.playbackState = 'playing';
-    }
+    // Sincroniza el estado si el sistema pausa/reanuda desde la pantalla de bloqueo
+    audioEl.addEventListener('play', () => {
+      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+    });
+    audioEl.addEventListener('pause', () => {
+      if (!audioEl.ended && 'mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+    });
+  }
+
+  function playBlob(blob, ssml) {
+    bindAudioListeners();
+    if (endedTimer) { clearTimeout(endedTimer); endedTimer = null; }
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
+    blobUrl = URL.createObjectURL(blob);
+
+    audioEl.src = blobUrl;
+    audioEl.load();
+
+    const cleanTitle = ssml.replace(/<[\s\S]*?>/g,' ').replace(/\s+/g,' ').trim().slice(0,60) || 'SSML Reader';
+    setupMediaSession(cleanTitle);
 
     audioEl.play().then(() => {
       isPlaying = true; isPaused = false;
-      requestWakeLock();
       setButtons(true);
       setDot('playing');
       setPlayerStatus('Reproduciendo…', 'playing');
       document.getElementById('btn-pause').textContent = '⏸ Pausa';
+      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
     }).catch(err => {
       setDot('error');
       setPlayerStatus(`Error de reproducción: ${err.message}`, 'error');
